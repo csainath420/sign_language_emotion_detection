@@ -5,17 +5,14 @@ from tensorflow.keras.models import load_model
 from deepface import DeepFace
 import joblib
 
-# Load model and labels
 model = load_model("sign_model.h5")
 label_encoder = joblib.load("labels.pkl")
 labels = label_encoder.classes_
 
-# Mediapipe hands
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
 mp_draw = mp.solutions.drawing_utils
 
-# OpenCV camera
 cap = cv2.VideoCapture(0)
 
 while True:
@@ -26,7 +23,6 @@ while True:
     frame = cv2.flip(frame, 1)
     output_frame = frame.copy()
 
-    # Emotion detection
     try:
         result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
         emotion = result[0]['dominant_emotion']
@@ -35,7 +31,6 @@ while True:
     except:
         pass
 
-    # Hand gesture detection
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     result = hands.process(rgb)
 

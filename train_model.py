@@ -8,7 +8,6 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 
-# Load images
 X, y = [], []
 for folder in os.listdir("gestures"):
     for file in os.listdir(f"gestures/{folder}"):
@@ -20,17 +19,14 @@ for folder in os.listdir("gestures"):
 
 X = np.array(X) / 255.0
 
-# Encode labels and save them
 label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(y)
 joblib.dump(label_encoder, "labels.pkl")
 
 y = to_categorical(y)
 
-# Train/test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-# CNN model
 model = Sequential([
     Conv2D(32, (3, 3), activation='relu', input_shape=(64, 64, 3)),
     MaxPooling2D(),
@@ -44,6 +40,5 @@ model = Sequential([
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10)
 
-# Save model
 model.save("sign_model.h5")
 print("✅ Model trained and saved as 'sign_model.h5'")

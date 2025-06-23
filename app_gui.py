@@ -10,23 +10,20 @@ from deepface import DeepFace
 from tensorflow.keras.models import load_model
 import joblib
 
-# Load model and labels
 model = load_model("sign_model.h5")
 label_encoder = joblib.load("labels.pkl")
 labels = label_encoder.classes_
 
-# Mediapipe
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
 mp_draw = mp.solutions.drawing_utils
 
-# Logger setup
 os.makedirs("logs", exist_ok=True)
 log_filename = f"logs/log_{datetime.datetime.now().strftime('%Y%m%d')}.txt"
-log_file = open(log_filename, "a")  # 'a' means append mode
+log_file = open(log_filename, "a")
 
 
-running = False  # For controlling the webcam thread
+running = False
 
 def detect():
     global running
@@ -39,7 +36,6 @@ def detect():
         frame = cv2.flip(frame, 1)
         output_frame = frame.copy()
 
-        # Emotion detection
         try:
             result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
             emotion = result[0]['dominant_emotion']
@@ -49,7 +45,6 @@ def detect():
         except:
             emotion = None
 
-        # Hand detection
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = hands.process(rgb)
 
@@ -97,7 +92,6 @@ def stop_detection():
     running = False
     messagebox.showinfo("Stopped", "Detection stopped and log saved.")
 
-# GUI setup
 root = tk.Tk()
 root.title("Sign Language + Emotion Detector")
 root.geometry("400x250")

@@ -3,21 +3,17 @@ import os
 import mediapipe as mp
 import time
 
-# 📝 Settings
 gesture_name = input("Enter gesture name: ")
-total_images = 100          # Change if you want more/less
-interval_seconds = 1        # Capture every 1 second
+total_images = 100
+interval_seconds = 1
 
-# 📁 Directory setup
 save_dir = f'gestures/{gesture_name}'
 os.makedirs(save_dir, exist_ok=True)
 
-# 🤚 Mediapipe setup
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
 mp_draw = mp.solutions.drawing_utils
 
-# 🎥 Open webcam
 cap = cv2.VideoCapture(0)
 img_count = 0
 last_capture_time = time.time()
@@ -37,12 +33,10 @@ while img_count < total_images:
         for handLms in result.multi_hand_landmarks:
             mp_draw.draw_landmarks(frame, handLms, mp_hands.HAND_CONNECTIONS)
 
-    # Display preview
     cv2.putText(frame, f"Collecting '{gesture_name}': {img_count}/{total_images}", (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
     cv2.imshow("Auto Capture", frame)
 
-    # Save image every `interval_seconds`
     if time.time() - last_capture_time >= interval_seconds:
         img_path = f"{save_dir}/{gesture_name}_{img_count}.jpg"
         cv2.imwrite(img_path, frame)
@@ -50,7 +44,6 @@ while img_count < total_images:
         img_count += 1
         last_capture_time = time.time()
 
-    # Optional: allow early exit
     if cv2.waitKey(1) & 0xFF == ord('q'):
         print("[INFO] Capture cancelled.")
         break
