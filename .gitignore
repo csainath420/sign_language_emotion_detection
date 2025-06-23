@@ -1,0 +1,13 @@
+# Ignore virtual environment and temporary files
+__pycache__/
+*.pyc
+*.pkl
+*.h5
+logs/
+.env/
+.vscode/
+.idea/
+.DS_Store
+dist/
+build/
+*.spec
