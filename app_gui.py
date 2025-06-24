@@ -10,19 +10,22 @@ from deepface import DeepFace
 from tensorflow.keras.models import load_model
 import joblib
 import speech_recognition as sr
+import pyttsx3
 
 model = load_model("sign_model.h5")
 label_encoder = joblib.load("labels.pkl")
 labels = label_encoder.classes_
 
-# Mediapipe for hand tracking
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
 mp_draw = mp.solutions.drawing_utils
 
+
+engine = pyttsx3.init()
+engine.setProperty('rate', 150)
+
 running = False
 log_file = None
-
 
 def detect():
     global running, log_file
@@ -40,7 +43,6 @@ def detect():
         output_frame = frame.copy()
         now = datetime.datetime.now()
 
-        # Emotion detection every 5 seconds
         if (now - last_emotion_time).total_seconds() >= 5:
             try:
                 result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
@@ -51,10 +53,12 @@ def detect():
                             cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
                 if log_file:
                     log_file.write(f"[{now}] Emotion: {emotion}\n")
+
+                engine.say(f"You look {emotion}")
+                engine.runAndWait()
             except Exception as e:
                 print(f"[Emotion Detection Error] {e}")
 
-        # Hand gesture detection every 5 seconds
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = hands.process(rgb)
 
@@ -89,11 +93,12 @@ def detect():
                     cv2.putText(output_frame, f"Gesture: {gesture}", (x_min, y_min - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
 
-                    # Log gesture only every 5 seconds
                     if (now - last_gesture_time).total_seconds() >= 5:
                         last_gesture_time = now
                         if log_file:
                             log_file.write(f"[{now}] Gesture: {gesture}\n")
+                        engine.say(f"Gesture detected: {gesture}")
+                        engine.runAndWait()
 
         cv2.imshow("Real-Time Detection", output_frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
