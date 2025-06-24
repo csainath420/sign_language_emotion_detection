@@ -28,7 +28,8 @@ def detect():
     global running, log_file
     cap = cv2.VideoCapture(0)
 
-    last_emotion_time = datetime.datetime.now() - datetime.timedelta(seconds=3)
+    last_emotion_time = datetime.datetime.now() - datetime.timedelta(seconds=5)
+    last_gesture_time = datetime.datetime.now() - datetime.timedelta(seconds=5)
 
     while running:
         ret, frame = cap.read()
@@ -37,21 +38,23 @@ def detect():
 
         frame = cv2.flip(frame, 1)
         output_frame = frame.copy()
-
         now = datetime.datetime.now()
+
+        # Emotion detection every 5 seconds
         if (now - last_emotion_time).total_seconds() >= 5:
             try:
                 result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
                 emotion = result[0]['dominant_emotion']
-                last_emotion_time = now  # update time
+                last_emotion_time = now
 
                 cv2.putText(output_frame, f"Emotion: {emotion}", (10, 40),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
                 if log_file:
-                    log_file.write(f"[{datetime.datetime.now()}] Emotion: {emotion}\n")
-            except:
-                pass
+                    log_file.write(f"[{now}] Emotion: {emotion}\n")
+            except Exception as e:
+                print(f"[Emotion Detection Error] {e}")
 
+        # Hand gesture detection every 5 seconds
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = hands.process(rgb)
 
@@ -77,16 +80,20 @@ def detect():
                 roi = cv2.resize(roi, (64, 64)) / 255.0
                 roi = roi.reshape(1, 64, 64, 3)
 
-                prediction = model.predict(roi)
-                idx = np.argmax(prediction)
+                pred = model.predict(roi)
+                idx = np.argmax(pred)
 
                 if idx < len(labels):
                     gesture = labels[idx]
                     cv2.rectangle(output_frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
                     cv2.putText(output_frame, f"Gesture: {gesture}", (x_min, y_min - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
-                    if log_file:
-                        log_file.write(f"[{datetime.datetime.now()}] Gesture: {gesture}\n")
+
+                    # Log gesture only every 5 seconds
+                    if (now - last_gesture_time).total_seconds() >= 5:
+                        last_gesture_time = now
+                        if log_file:
+                            log_file.write(f"[{now}] Gesture: {gesture}\n")
 
         cv2.imshow("Real-Time Detection", output_frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
